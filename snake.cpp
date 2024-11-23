@@ -8,30 +8,44 @@
 #include <stdlib.h>
 #include <time.h>
 
-
+//640 x 480 square pixel
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
 #define TILE_SIZE 20
 
+// x,y coordinate
 typedef struct {
     int x, y;
 } Point;
 
 typedef struct {
+    //body: An array of Points representing the snake's position on the grid.
+
     Point body[SCREEN_WIDTH * SCREEN_HEIGHT / (TILE_SIZE * TILE_SIZE)];
+    
     int length;
     Point direction;
+
 } Snake;
 
 // Function to load textures
 SDL_Texture *load_texture(SDL_Renderer *renderer, const char *file) {
+    //An SDL_Surface is a representation of a 2D image stored in RAM.
+    //IMG_Load is part of the SDL_image library.
+
+
     SDL_Surface *surface = IMG_Load(file);
+    
     if (!surface) {
         printf("IMG_Load Error: %s\n", IMG_GetError());
         return NULL;
     }
+
+    //Converts the SDL_Surface into an SDL_Texture.
+    
     SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
     SDL_FreeSurface(surface);
+    
     return texture;
 }
 
@@ -39,17 +53,31 @@ SDL_Texture *load_texture(SDL_Renderer *renderer, const char *file) {
 void render_text(SDL_Renderer *renderer, TTF_Font *font, const char *text, SDL_Color color, int x, int y) {
     SDL_Surface *surface = TTF_RenderText_Solid(font, text, color);
     SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
+    
+    //Desitinition Rectangle
+    //surface->w and surface->h) are taken from the surface's width and height.
+
     SDL_Rect dest = {x, y, surface->w, surface->h};
     SDL_RenderCopy(renderer, texture, NULL, &dest);
     SDL_FreeSurface(surface);
     SDL_DestroyTexture(texture);
 }
 
-int main(int argc, char *argv[]) {
+int main() {
     // Initialize SDL and subsystems
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0 || TTF_Init() == -1 || Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) return 1;
+
+    //44100: Audio frequency in Hz (standard for CD-quality audio).
+    //MIX_DEFAULT_FORMAT: Audio format (default is signed 16-bit samples).
+    //2: Number of channels (stereo).
+    //2048: Buffer size in bytes (larger buffers reduce playback glitches but increase latency).
+
+
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0 || TTF_Init() == -1 || Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0)
+        return 1;
+    
     SDL_Window *window = SDL_CreateWindow("Snake Game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
     SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    
     if (!window || !renderer) return 1;
 
     // Load fonts, sounds, and textures
@@ -82,19 +110,28 @@ int main(int argc, char *argv[]) {
 
     // Initialize the snake and food
     srand(time(NULL));
-    Snake snake = {{0}, 5, {1, 0}};
+    Snake snake = {{0}, 5, {1, 0}};  //snake.body - 0, snake.length - 5, snake.direction- (x,y) = {1,0}- starts from right
+    
     for (int i = 0; i < snake.length; ++i)
-        snake.body[i] = (Point){snake.length - i - 1, 0};
+        snake.body[i] = (Point){snake.length - i - 1, 0};  //(x,y) = {4,0}[head] -> {0,0}[tail]
 
+    //Food Position Initialization
     Point food = {rand() % (SCREEN_WIDTH / TILE_SIZE), rand() % (SCREEN_HEIGHT / TILE_SIZE)};
-    bool running = true;
-    SDL_Event e;
-    int score = 0;
+    
 
+    SDL_Event e;
+    int score = 0; //initial score
+
+    bool running = true;
     // Game loop
     while (running) {
         while (SDL_PollEvent(&e)) {
+            
+            //Triggered when the user closes the game window (e.g., by clicking the "X" button)
             if (e.type == SDL_QUIT) running = false;
+            
+            //Triggered when a key is pressed.
+            //The if (snake.direction.x == 0) or if (snake.direction.y == 0) checks prevent the snake from reversing into itself
             if (e.type == SDL_KEYDOWN) {
                 switch (e.key.keysym.sym) {
                     case SDLK_UP: if (snake.direction.y == 0) snake.direction = (Point){0, -1}; break;
@@ -106,8 +143,12 @@ int main(int argc, char *argv[]) {
         }
 
         // Move the snake
+
+        //moving the body
         for (int i = snake.length - 1; i > 0; --i)
             snake.body[i] = snake.body[i - 1];
+        
+        //moving the head
         snake.body[0].x += snake.direction.x;
         snake.body[0].y += snake.direction.y;
 
@@ -185,8 +226,10 @@ int main(int argc, char *argv[]) {
         SDL_DestroyTexture(headTextures[i]);
         SDL_DestroyTexture(tailTextures[i]);
     }
-    for (int i = 0; i < 6; ++i)
+    
+    for (int i = 0; i < 6; ++i) {
         SDL_DestroyTexture(bodyTextures[i]);
+    }
 
     SDL_DestroyTexture(foodTexture);
     Mix_FreeChunk(eatSound);
