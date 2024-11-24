@@ -46,8 +46,9 @@ void render_text(SDL_Renderer *renderer, TTF_Font *font, const char *text, SDL_C
     SDL_DestroyTexture(texture);
 }
 
-// Function to render the Game Over screen
+// Function to display "Game Over" on screen
 void render_game_over(SDL_Renderer *renderer, TTF_Font *font, int score) {
+    
     // Clearing the screen
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // Black background
     SDL_RenderClear(renderer);
@@ -80,6 +81,7 @@ void render_game_over(SDL_Renderer *renderer, TTF_Font *font, int score) {
 }
 
 int main() {
+    
     //Initialization Checking
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0 || TTF_Init() == -1 || Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0)
         return 1;
@@ -118,6 +120,7 @@ int main() {
 
     srand(time(NULL)); //random number generator
     
+    //snake initialization
     Snake snake = {{0}, 5, {1, 0}};
     for (int i = 0; i < snake.length; ++i)
         snake.body[i] = (Point){snake.length - i - 1, 0};
@@ -145,6 +148,7 @@ int main() {
         //Moving the Body
         for (int i = snake.length - 1; i > 0; --i)
             snake.body[i] = snake.body[i - 1];
+        
         //Moving the Head
         snake.body[0].x += snake.direction.x;
         snake.body[0].y += snake.direction.y;
@@ -159,6 +163,7 @@ int main() {
             if (snake.body[0].x == snake.body[i].x && snake.body[0].y == snake.body[i].y)
                 running = false;
         
+        //Snake growth
         if (snake.body[0].x == food.x && snake.body[0].y == food.y) {
             snake.length++;
             score++;
@@ -177,6 +182,7 @@ int main() {
             SDL_Rect snakeRect = {snake.body[i].x * TILE_SIZE, snake.body[i].y * TILE_SIZE, TILE_SIZE, TILE_SIZE};
             SDL_Texture *segmentTexture = NULL;
 
+            //Head movement
             if (i == 0) {
                 if (snake.direction.x == 1) segmentTexture = headTextures[3]; //right
                 else if (snake.direction.x == -1) segmentTexture = headTextures[2]; //left
@@ -184,15 +190,17 @@ int main() {
                 else if (snake.direction.y == -1) segmentTexture = headTextures[0]; //upward
             }
             
+            //Tail movement
             else if (i == snake.length - 1) {
                 Point prev = snake.body[i - 1];
 
-                if (snake.body[i].x < prev.x) segmentTexture = tailTextures[3]; //moving right
-                else if (snake.body[i].x > prev.x) segmentTexture = tailTextures[2]; //moving left
-                else if (snake.body[i].y < prev.y) segmentTexture = tailTextures[1]; //moving downward
-                else if (snake.body[i].y > prev.y) segmentTexture = tailTextures[0]; //moving upward
+                if (snake.body[i].x < prev.x) segmentTexture = tailTextures[3]; //moving left
+                else if (snake.body[i].x > prev.x) segmentTexture = tailTextures[2]; //moving right
+                else if (snake.body[i].y < prev.y) segmentTexture = tailTextures[1]; //moving upward
+                else if (snake.body[i].y > prev.y) segmentTexture = tailTextures[0]; //moving downward
             }
             
+            //Body part movement
             else {
                 Point prev = snake.body[i - 1];
                 Point next = snake.body[i + 1];
@@ -205,22 +213,22 @@ int main() {
                 //turns right after moving up, or, turns downward after moving left
                 else if ((prev.x < snake.body[i].x && next.y < snake.body[i].y) || 
                          (next.x < snake.body[i].x && prev.y < snake.body[i].y))
-                    segmentTexture = bodyTextures[2];
+                    segmentTexture = bodyTextures[2]; //top-left
                 
-                //turns right after moving down, or, turns upward after moving left
+                //turns right after moving downward, or, turns upward after moving left
                 else if ((prev.x < snake.body[i].x && next.y > snake.body[i].y) || 
                          (next.x < snake.body[i].x && prev.y > snake.body[i].y))
-                    segmentTexture = bodyTextures[4];
+                    segmentTexture = bodyTextures[4]; //bottom-left
                     
                 //turns left after moving down, or, turns upward after moving right    
                 else if ((prev.x > snake.body[i].x && next.y > snake.body[i].y) || 
                          (next.x > snake.body[i].x && prev.y > snake.body[i].y))
-                    segmentTexture = bodyTextures[5];
+                    segmentTexture = bodyTextures[5]; //bottom-right
 
                 //left after moving up ,or, downward after moving right
                 else if ((prev.x > snake.body[i].x && next.y < snake.body[i].y) || 
                          (next.x > snake.body[i].x && prev.y < snake.body[i].y))
-                    segmentTexture = bodyTextures[3];
+                    segmentTexture = bodyTextures[3]; //top-right
             }
             SDL_RenderCopy(renderer, segmentTexture, NULL, &snakeRect);
         }
@@ -233,7 +241,7 @@ int main() {
         SDL_Delay(100);
     }
 
-    // Render the Game Over screen
+    // Rendering the Game Over screen
     render_game_over(renderer, font, score);
 
     SDL_DestroyTexture(foodTexture);
