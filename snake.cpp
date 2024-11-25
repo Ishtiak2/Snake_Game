@@ -115,9 +115,10 @@ int main() {
     bodyTextures[4] = load_texture(renderer, "texture/body_bottomleft.png");
     bodyTextures[5] = load_texture(renderer, "texture/body_bottomright.png");
 
-    SDL_Texture *foodTexture = load_texture(renderer, "food.png");
-    if (!font || !eatSound || !foodTexture) return 1;
-
+    SDL_Texture *foodTexture = load_texture(renderer, "food.png");    
+    
+    if (!font || !eatSound || !foodTexture) return 1;   
+    
     srand(time(NULL)); //random number generator
     
     //snake initialization
@@ -132,6 +133,7 @@ int main() {
     bool running = true;
 
     while (running) {
+        //event handling loop
         while (SDL_PollEvent(&e)) {
             if (e.type == SDL_QUIT) running = false;
             
@@ -145,7 +147,7 @@ int main() {
             }
         }
 
-        //Moving the Body
+        //Moving the body
         for (int i = snake.length - 1; i > 0; --i)
             snake.body[i] = snake.body[i - 1];
         
